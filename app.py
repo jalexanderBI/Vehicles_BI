@@ -186,67 +186,67 @@ st.subheader("Vehículo más económico encontrado en tu búsqueda :") # subtitu
 # Mostrar algunos vehículos para seleccionar (puedes adaptar esto a tus filtros)
 
 
-if 'final_filtered_data' in locals(): # locals: Función que devuelve un diccionario con todas las variables locales existentes en ese momento
-    vehiculos_sample = final_filtered_data[['model', 'price']].sort_values('price', ascending = True).drop_duplicates(subset=['model']) # selección para filtrar dataset por las columnas model y price, evitar duplicados de la columna model
+if 'final_filtered_data' in locals(): # locals: Función que devuelve un diccionario con todas las variables locales existentes en ese momento y verifica si final_filtered_data existe en el entorno actual
+    vehiculos_sample = final_filtered_data[['model', 'price']].sort_values('price', ascending = True).drop_duplicates(subset=['model']) # selección para filtrar dataset por las columnas model y price, evitar duplicados de la columna model, se ordena por la columna price orden ascendente para ubicar el de menor valor primero
     selected_vehicle = st.selectbox( # caja de selección básado en el dataset filtrado vehiculos_sample
         "Elige un vehículo:",
-        options=vehiculos_sample['model'].tolist(),
-        format_func=lambda x: f"{x} - ${vehiculos_sample[vehiculos_sample['model']==x]['price'].tolist()}"
+        options=vehiculos_sample['model'].tolist(), # Convierte la columna 'model' a una lista para las opciones del menú
+        format_func=lambda x: f"{x} - ${vehiculos_sample[vehiculos_sample['model']==x]['price'].tolist()}" # Personaliza cómo se muestran las opciones en el menú, Función anónima que recibe cada modelo (x) y devuelve un string formateado, muestra todos los precios como lista, no solo el precio específico
     )
 
     
     # Obtener el precio del vehículo seleccionado
-    precio_vehiculo = vehiculos_sample[vehiculos_sample['model']==selected_vehicle]['price'].iloc[0]
+    precio_vehiculo = vehiculos_sample[vehiculos_sample['model']==selected_vehicle]['price'].iloc[0] # se elige el primer item de la lista filtrada
 else:
-    # Si no tienes car_data, usar un valor por defecto
+    # Si no se tiene car_data, usar un valor por defecto
     precio_vehiculo = st.number_input("Ingresa el precio del vehículo ($):", min_value=1000, max_value=1000000, value=25000)
 
 
 
 
 # Parámetros del crédito
-st.subheader("Condiciones del Crédito")
+st.subheader("Condiciones del Crédito") # titulo para el crédito
 
-tasa_interes_anual = 0.24  # 24% EA
-st.info(f"Tasa de interés: {tasa_interes_anual*100}% EA")
+tasa_interes_anual = 0.24  # variable de tasa de interes 24% EA
+st.info(f"Tasa de interés: {tasa_interes_anual*100}% EA") # se imprime texto con inforamción de tasa de interes en porcentaje
 
 # Barra deslizante para años de financiamiento
 anos_financiamiento = st.slider(
     "Años de financiamiento:",
-    min_value=5,
-    max_value=10,
-    value=7,
-    step=1
+    min_value=3, # valor mínimo de slider
+    max_value=7, # valor máximo de slider
+    value=5, # valor por defecto
+    step=1 # valor incremental
 )
 
 # Cálculos financieros
-def calcular_cuota_mensual(precio, tasa_anual, anos):
+def calcular_cuota_mensual(precio, tasa_anual, anos): # función calculo de tasas en 12 meses
     """Calcula la cuota mensual usando la fórmula de anualidades"""
-    tasa_mensual = tasa_anual / 12
-    numero_pagos = anos * 12
+    tasa_mensual = tasa_anual / 12 # valor tasa de interes por mes
+    numero_pagos = anos * 12 # cantidad de pagos totales, multiplicando por año por meses del año
     
-    if tasa_mensual > 0:
-        cuota = precio * (tasa_mensual * (1 + tasa_mensual)**numero_pagos) / ((1 + tasa_mensual)**numero_pagos - 1)
+    if tasa_mensual > 0: # condición si tasa mayor que cero
+        cuota = precio * (tasa_mensual * (1 + tasa_mensual)**numero_pagos) / ((1 + tasa_mensual)**numero_pagos - 1) # formula de amotización : Calcula el factor de capitalización - cómo crece el dinero con el tiempo, Numerador de la fracción - representa la porción de interés, Denominador - normaliza el cálculo para distribuir los pagos
     else:
-        cuota = precio / numero_pagos
+        cuota = precio / numero_pagos # si no hubiera intereses
     
     return cuota
 
-def generar_tabla_amortizacion(precio, tasa_anual, anos):
+def generar_tabla_amortizacion(precio, tasa_anual, anos): # función donde ingresan los parámetros
     """Genera tabla de amortización"""
     tasa_mensual = tasa_anual / 12
     numero_pagos = anos * 12
-    cuota = calcular_cuota_mensual(precio, tasa_anual, anos)
+    cuota = calcular_cuota_mensual(precio, tasa_anual, anos) # resultado función anterior con return cuota
     
-    saldo = precio
-    tabla = []
+    saldo = precio # precio vehículo
+    tabla = [] # se crea lista vacia
     
-    for mes in range(1, numero_pagos + 1):
-        interes = saldo * tasa_mensual
+    for mes in range(1, numero_pagos + 1): #ciclo for para determinar valor cuota mensual
+        interes = saldo * tasa_mensual # interes básado en el saldo capital actual
         capital = cuota - interes
         saldo -= capital
         
-        tabla.append({
+        tabla.append({ # datos que iran a la tabla como un diccionario
             'Mes': mes,
             'Cuota': cuota,
             'Interés': interes,
@@ -254,7 +254,7 @@ def generar_tabla_amortizacion(precio, tasa_anual, anos):
             'Saldo': max(saldo, 0)
         })
     
-    return pd.DataFrame(tabla)
+    return pd.DataFrame(tabla) # devuelve el dataframe
 
 # Calcular resultados
 cuota_mensual = calcular_cuota_mensual(precio_vehiculo, tasa_interes_anual, anos_financiamiento)
@@ -264,46 +264,46 @@ interes_total = total_pagado - precio_vehiculo
 # Mostrar resultados
 st.subheader("📊 Resumen de la Cotización")
 
-col1, col2, col3 = st.columns(3)
+col1, col2, col3 = st.columns(3) # se establecen 3 columanas en pantalla
 
-with col1:
-    st.metric(
-        "Cuota Mensual",
-        f"${cuota_mensual:,.2f}",
-        delta=None
+with col1: # columan 1
+    st.metric( #st. metric crea un componente visual que muestra un valor numérico con formato atractivo para KPI´s, etc
+        "Cuota Mensual", # texto
+        f"${cuota_mensual:,.2f}", # variable de cuota mensual con dos cifras decimales
+        delta=None # indicador de cambio
     )
 
 with col2:
     st.metric(
         "Total a Pagar",
-        f"${total_pagado:,.2f}",
+        f"${total_pagado:,.2f}", # variable de total pagado en el total de tiempo escogido, con dos cifras decimales
         delta=f"${interes_total:,.2f} de interés"
     )
 
 with col3:
     st.metric(
         "Costo Financiero",
-        f"${interes_total:,.2f}",
+        f"${interes_total:,.2f}",# variable de total pagado en intereses en el total de tiempo escogido, con dos cifras decimales
         delta=f"{((interes_total/precio_vehiculo)*100):.1f}% del valor"
     )
 
 # Gráfico de distribución de pagos
-st.subheader("📈 Distribución de Pagos")
+st.subheader("📈 Distribución de Pagos") # texto
 
 import plotly.graph_objects as go
 
 labels = ['Valor del Vehículo', 'Intereses']
 values = [precio_vehiculo, interes_total]
 
-fig = go.Figure(data=[go.Pie(labels=labels, values=values, hole=.3)])
-fig.update_layout(title="Composición del Total a Pagar")
-st.plotly_chart(fig, use_container_width=True)
+fig = go.Figure(data=[go.Pie(labels=labels, values=values, hole=.3)]) # gra´fico de pastel, muestra texto, valores de acuerdo a su proporción y tamaño de ahujero en 3
+fig.update_layout(title="Composición del Total a Pagar") # Añade titulo a toda la gráfica
+st.plotly_chart(fig, use_container_width=True) # integra el gráfico en la aplicación Streamlit.
 
 # Tabla de amortización (opcional)
-if st.checkbox("Mostrar tabla de amortización (primeros 12 meses)"):
-    st.subheader("📋 Tabla de Amortización")
+if st.checkbox("Mostrar tabla de amortización (primeros 12 meses)"): # se crea un condicional para el checkbox
+    st.subheader("📋 Tabla de Amortización") # subtitulo
     tabla_amort = generar_tabla_amortizacion(precio_vehiculo, tasa_interes_anual, anos_financiamiento)
-    st.dataframe(tabla_amort.head(12).style.format({
+    st.dataframe(tabla_amort.head(12).style.format({ # se muestran las primeras 12 filas de la tabla de amortización
         'Cuota': '${:,.2f}',
         'Interés': '${:,.2f}',
         'Capital': '${:,.2f}',
@@ -311,7 +311,7 @@ if st.checkbox("Mostrar tabla de amortización (primeros 12 meses)"):
     }))
 
 # Información adicional
-st.subheader("💡 Información Importante")
+st.subheader("💡 Información Importante") # información adicional
 st.write(f"""
 - **Plazo:** {anos_financiamiento} años ({anos_financiamiento * 12} meses)
 - **Tasa efectiva anual:** {tasa_interes_anual * 100}%
@@ -319,24 +319,31 @@ st.write(f"""
 - **Valor financiado:** ${precio_vehiculo:,.2f}
 - **Total intereses:** ${interes_total:,.2f}
 """)
+st.subheader('')
 
-def texto_titulo3(texto):
+def texto_titulo3(texto): # función para texto de título 3
+    st.markdown(f'<h1 style="font-size: 32px; border: 2px solid #4CAF50; padding: 10px; border-radius: 8px;">{texto}</h1>', 
+                unsafe_allow_html=True)
+    
+texto_titulo3("Otros datos de interés del reporte general de vehículos en venta") # texto número 4
+
+st.subheader('')
+
+def texto_titulo4(texto): # función para texto de título 3
     st.markdown(f'<h1 style="font-size: 28px; border: 2px solid #4CAF50; padding: 10px; border-radius: 8px;">{texto}</h1>', 
                 unsafe_allow_html=True)
     
 
+texto_titulo4("Distribución por Año de Fabricación de todos los Vehículos") # texto número 4
 
-
-texto_titulo3("Distribución por Año de Fabricación del Vehículo")
-
-build_histogram2 = st.checkbox('Construir Histograma por Año de Fabricación')
+build_histogram2 = st.checkbox('Construir Histograma por Año de Fabricación') # histograma de vecículos general segun año de fabricación
 if build_histogram2:
 
-    fig = px.histogram(
-        car_data,
+    fig = px.histogram( # se crea histograma
+        car_data, # dataset inicial
         x="model_year",        # Columna para el eje X (año del modelo)
         color="condition",     # Columna para diferenciar por color (condición)
-        title="Distribución del Año de Fabricación por Condición del Vehículo",
+        title="Distribución por Año de Fabricación del total del Listado General de Vehículos",
         labels={"model_year": "Año del Vehículo", "condition": "Condición"}, # Etiquetas más claras
         category_orders={"condition": ["excellent", "good", "fair", "like new", "new", "salvage"]} # Orden opcional
     )
