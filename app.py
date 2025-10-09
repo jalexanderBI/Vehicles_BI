@@ -187,16 +187,16 @@ st.subheader("Vehículo más económico encontrado en tu búsqueda :") # subtitu
 
 
 if 'final_filtered_data' in locals(): # locals: Función que devuelve un diccionario con todas las variables locales existentes en ese momento y verifica si final_filtered_data existe en el entorno actual
-    vehiculos_sample = final_filtered_data[['model', 'price']].sort_values('price', ascending = True).drop_duplicates(subset=['model']) # selección para filtrar dataset por las columnas model y price, evitar duplicados de la columna model, se ordena por la columna price orden ascendente para ubicar el de menor valor primero
+    vehiculos_sample = final_filtered_data[['model', 'price']].sort_values('price', ascending = True) # selección para filtrar dataset por las columnas model y price, evitar duplicados de la columna model, se ordena por la columna price orden ascendente para ubicar el de menor valor primero
+    vehiculos_sample['car'] = vehiculos_sample['model'] + ' - $' + vehiculos_sample['price'].astype(str) # se crea nueva columna "car" que concatena el modelo y el precio en formato string 
+    print("Hola Estoy imprimiendo vehiculos_sample") # mensaje de prueba
     selected_vehicle = st.selectbox( # caja de selección básado en el dataset filtrado vehiculos_sample
         "Elige un vehículo:",
-        options=vehiculos_sample['model'].tolist(), # Convierte la columna 'model' a una lista para las opciones del menú
-        format_func=lambda x: f"{x} - ${vehiculos_sample[vehiculos_sample['model']==x]['price'].tolist()}" # Personaliza cómo se muestran las opciones en el menú, Función anónima que recibe cada modelo (x) y devuelve un string formateado, muestra todos los precios como lista, no solo el precio específico
+        vehiculos_sample['car'].tolist() # Personaliza cómo se muestran las opciones en el menú, Función anónima que recibe cada modelo (x) y devuelve un string formateado, muestra todos los precios como lista, no solo el precio específico
+        #vehiculos_sample['model'].tolist() # Personaliza cómo se muestran las opciones en el menú, Función anónima que recibe cada modelo (x) y devuelve un string formateado, muestra todos los precios como lista, no solo el precio específico
     )
+    precio_vehiculo = int(selected_vehicle.split(' - $')[1]) # Extrae el precio del vehículo seleccionado dividiendo el string y convirtiéndolo a entero
 
-    
-    # Obtener el precio del vehículo seleccionado
-    precio_vehiculo = vehiculos_sample[vehiculos_sample['model']==selected_vehicle]['price'].iloc[0] # se elige el primer item de la lista filtrada
 else:
     # Si no se tiene car_data, usar un valor por defecto
     precio_vehiculo = st.number_input("Ingresa el precio del vehículo ($):", min_value=1000, max_value=1000000, value=25000)
